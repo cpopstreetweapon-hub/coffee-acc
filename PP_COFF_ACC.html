@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP COFF ACC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ddd;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        .user-select {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .user-select span {
+            font-size: 14px;
+        }
+        .user-select select {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            background: #D2691E;
+            color: white;
+        }
+
+        /* Main Content */
+        main {
+            padding: 24px;
+        }
+
+        /* Section Title */
+        .section-title {
+            color: #D2691E;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Dashboard Cards */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .card {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-left: 4px solid;
+        }
+        .card p:first-child {
+            color: #aaa;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .card p:last-child {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #D2691E;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            color: #D2691E;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background: #D2691E;
+            color: white;
+        }
+        .tab-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Buttons */
+        .button-group {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .btn-income {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-expense {
+            background: #FF6B6B;
+            color: white;
+        }
+        .btn-save {
+            background: #D2691E;
+            color: white;
+        }
+        .btn-cancel {
+            background: #666;
+            color: white;
+        }
+        .btn-delete {
+            background: rgba(255, 107, 107, 0.3);
+            color: #FF6B6B;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* Form */
+        .form-box {
+            background: #2d2d2d;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none;
+        }
+        .form-box.show {
+            display: block;
+        }
+        .form-box h3 {
+            color: #D2691E;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        input[type="date"],
+        input[type="text"],
+        input[type="number"],
+        select {
+            background: #1a1a1a;
+            color: #fff;
+            border: 2px solid #D2691E;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        input::placeholder {
+            color: #888;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            background: #2d2d2d;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .tab-content.show {
+            display: block;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        thead {
+            background: #444;
+            border-bottom: 2px solid #D2691E;
+        }
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            color: #D2691E;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #444;
+            color: #ddd;
+        }
+        tbody tr:hover {
+            background: rgba(210, 105, 30, 0.1);
+        }
+
+        /* Status badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-income {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        .badge-expense {
+            background: rgba(255, 107, 107, 0.2);
+            color: #FF6B6B;
+        }
+
+        /* Colors */
+        .text-income {
+            color: #4CAF50;
+        }
+        .text-expense {
+            color: #FF6B6B;
+        }
+        .text-profit {
+            color: #FFB74D;
+        }
+
+        /* Summary Section */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .summary-card {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid;
+        }
+        .summary-card h4 {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .summary-card .amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        .scroll-table {
+            overflow-x: auto;
+        }
+
+        .date-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>☕ PP COFF ACC</h1>
+            <div class="user-select">
+                <span>ผู้ใช้งาน:</span>
+                <select id="userSelect" onchange="changeUser()">
+                    <option value="user1">👤 พนักงาน 1</option>
+                    <option value="user2">👤 พนักงาน 2</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Dashboard Selector -->
+        <div id="dashboardSelector" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 2px solid #D2691E;">
+            <button class="tab-btn active" onclick="showDashboard('today')">📅 วันนี้</button>
+            <button class="tab-btn" onclick="showDashboard('weekly')">📈 รายสัปดาห์</button>
+            <button class="tab-btn" onclick="showDashboard('monthly')">📊 รายเดือน</button>
+            <button class="tab-btn" onclick="showDashboard('yearly')">📋 รายปี</button>
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div id="dashboardContent">
+            <div id="todayDash">
+                <h2 class="section-title">📅 วันนี้ (<span id="todayDate"></span>)</h2>
+                <div class="dashboard">
+                    <div class="card" style="border-left-color: #2E7D32;">
+                        <p>รายได้วันนี้</p>
+                        <p class="text-income" id="todayIncome">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D32F2F;">
+                        <p>ค่าใช้จ่ายวันนี้</p>
+                        <p class="text-expense" id="todayExpense">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #1976D2;">
+                        <p>คงเหลือเงินสด</p>
+                        <p id="cashBalance">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #F57C00;">
+                        <p>กำไรวันนี้</p>
+                        <p id="todayProfit">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D2691E;">
+                        <p>ยอดคงเหลือในบัญชี</p>
+                        <p id="accountBalance">฿0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="weeklyDash" style="display: none;">
+                <h2 class="section-title">📈 สรุปรายสัปดาห์ที่ผ่านมา</h2>
+                <div class="dashboard">
+                    <div class="card" style="border-left-color: #2E7D32;">
+                        <p>รายได้รายสัปดาห์</p>
+                        <p class="text-income" id="weekIncome">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D32F2F;">
+                        <p>ค่าใช้จ่ายรายสัปดาห์</p>
+                        <p class="text-expense" id="weekExpense">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #F57C00;">
+                        <p>กำไรรายสัปดาห์</p>
+                        <p id="weekProfit">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D2691E;">
+                        <p>ค่าเฉลี่ยต่อวัน</p>
+                        <p id="weekAverage">฿0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="monthlyDash" style="display: none;">
+                <h2 class="section-title">📊 สรุปเดือนนี้</h2>
+                <div class="dashboard">
+                    <div class="card" style="border-left-color: #2E7D32;">
+                        <p>รายได้รายเดือน</p>
+                        <p class="text-income" id="monthIncomeCard">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D32F2F;">
+                        <p>ค่าใช้จ่ายรายเดือน</p>
+                        <p class="text-expense" id="monthExpenseCard">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #F57C00;">
+                        <p>กำไรรายเดือน</p>
+                        <p id="monthProfitCard">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D2691E;">
+                        <p>ค่าเฉลี่ยต่อวัน</p>
+                        <p id="monthAverage">฿0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="yearlyDash" style="display: none;">
+                <h2 class="section-title">📋 สรุปปีนี้</h2>
+                <div class="dashboard">
+                    <div class="card" style="border-left-color: #2E7D32;">
+                        <p>รายได้รายปี</p>
+                        <p class="text-income" id="yearIncome">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D32F2F;">
+                        <p>ค่าใช้จ่ายรายปี</p>
+                        <p class="text-expense" id="yearExpense">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #F57C00;">
+                        <p>กำไรรายปี</p>
+                        <p id="yearProfit">฿0.00</p>
+                    </div>
+                    <div class="card" style="border-left-color: #D2691E;">
+                        <p>ค่าเฉลี่ยต่อวัน</p>
+                        <p id="yearAverage">฿0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button class="btn-income" onclick="showForm('income')">➕ บันทึกรายรับ</button>
+            <button class="btn-expense" onclick="showForm('expense')">➕ บันทึกรายจ่าย</button>
+        </div>
+
+        <!-- Form -->
+        <div class="form-box" id="formBox">
+            <h3 id="formTitle">บันทึกรายรับ</h3>
+            <div class="form-grid">
+                <input type="date" id="formDate" value="">
+                <input type="text" id="formDescription" placeholder="รายละเอียด (เช่น ขายกาแฟ 10 แก้ว)">
+                <input type="number" id="formAmount" placeholder="จำนวนเงิน" step="0.01">
+                <select id="formCategory" style="display: none;">
+                    <option value="other">หมวดหมู่ - อื่น ๆ</option>
+                    <option value="supplies">วัตถุดิบ/สินค้า</option>
+                    <option value="utilities">ค่าสาธารณูปโภค</option>
+                    <option value="rent">ค่าเช่า</option>
+                    <option value="salary">เงินเดือน</option>
+                    <option value="maintenance">ซ่อมแซม</option>
+                    <option value="delivery">ค่าส่งสินค้า</option>
+                    <option value="investment">ลงทุน</option>
+                    <option value="purchase">ซื้อของ</option>
+                    <option value="dividend">ปันผล</option>
+                    <option value="carinstallment">ผ่อนรถ</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-save" onclick="saveTransaction()">บันทึก</button>
+                <button class="btn-cancel" onclick="closeForm()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('daily')">📊 ข้อมูลรายวัน</button>
+            <button class="tab-btn" onclick="showTab('weekly')">📈 สรุปรายสัปดาห์</button>
+            <button class="tab-btn" onclick="showTab('monthly')">📋 สรุปรายเดือน</button>
+        </div>
+
+        <!-- Daily Tab -->
+        <div class="tab-content show" id="dailyTab">
+            <div class="date-selector">
+                <h3 style="margin: 0; color: #D2691E;">📝 รายการวันที่ <span id="selectedDateDisplay"></span></h3>
+                <input type="date" id="dailyDateSelector" onchange="changeDailyDate()">
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>เวลา</th>
+                            <th>ผู้ใช้</th>
+                            <th>รายละเอียด</th>
+                            <th>ประเภท</th>
+                            <th style="text-align: right;">จำนวนเงิน</th>
+                            <th style="text-align: center;">ลบ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dailyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Weekly Tab -->
+        <div class="tab-content" id="weeklyTab">
+            <h3 style="color: #D2691E; margin-bottom: 20px;">📊 สรุปรายสัปดาห์</h3>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วัน</th>
+                            <th style="text-align: right;">รายรับ</th>
+                            <th style="text-align: right;">รายจ่าย</th>
+                            <th style="text-align: right;">กำไร</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weeklyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Monthly Tab -->
+        <div class="tab-content" id="monthlyTab">
+            <h3 style="color: #D2691E; margin-bottom: 24px;">📋 สรุปรายเดือน</h3>
+            <div class="summary-grid">
+                <div class="summary-card" style="border-left-color: #4CAF50;">
+                    <h4>รายรับเดือนนี้</h4>
+                    <p class="amount text-income" id="monthIncome">฿0.00</p>
+                </div>
+                <div class="summary-card" style="border-left-color: #FF6B6B;">
+                    <h4>รายจ่ายเดือนนี้</h4>
+                    <p class="amount text-expense" id="monthExpense">฿0.00</p>
+                </div>
+                <div class="summary-card" style="border-left-color: #4CAF50;">
+                    <h4>กำไรสุทธิเดือนนี้</h4>
+                    <p class="amount text-profit" id="monthProfit">฿0.00</p>
+                </div>
+            </div>
+            <h4 style="color: #D2691E; margin-bottom: 16px;">📊 รายจ่ายตามหมวดหมู่</h4>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>หมวดหมู่</th>
+                            <th style="text-align: right;">จำนวนเงิน</th>
+                            <th style="text-align: right;">เปอร์เซนต์</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let transactions = [];
+        let currentUser = 'user1';
+        let currentType = '';
+        let selectedDate = new Date().toISOString().split('T')[0];
+
+        const categoryLabels = {
+            'supplies': '📦 วัตถุดิบ/สินค้า',
+            'utilities': '⚡ ค่าสาธารณูปโภค',
+            'rent': '🏠 ค่าเช่า',
+            'salary': '💰 เงินเดือน',
+            'maintenance': '🔧 ซ่อมแซม',
+            'delivery': '🚚 ค่าส่งสินค้า',
+            'investment': '📈 ลงทุน',
+            'purchase': '🛒 ซื้อของ',
+            'dividend': '🎁 ปันผล',
+            'carinstallment': '🚗 ผ่อนรถ',
+            'other': '📌 อื่น ๆ'
+        };
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadData();
+            setTodayDate();
+            document.getElementById('formDate').valueAsDate = new Date();
+            document.getElementById('dailyDateSelector').value = selectedDate;
+            updateAll();
+        });
+
+        function setTodayDate() {
+            const today = new Date();
+            document.getElementById('todayDate').textContent = today.toLocaleDateString('th-TH');
+            document.getElementById('selectedDateDisplay').textContent = today.toLocaleDateString('th-TH');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('cafeTransactions');
+            if (saved) {
+                transactions = JSON.parse(saved);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('cafeTransactions', JSON.stringify(transactions));
+        }
+
+        function changeUser() {
+            currentUser = document.getElementById('userSelect').value;
+        }
+
+        function showForm(type) {
+            currentType = type;
+            const formTitle = type === 'income' ? '✅ บันทึกรายรับ' : '💸 บันทึกรายจ่าย';
+            document.getElementById('formTitle').textContent = formTitle;
+            document.getElementById('formCategory').style.display = type === 'expense' ? 'block' : 'none';
+            document.getElementById('formBox').classList.add('show');
+        }
+
+        function closeForm() {
+            document.getElementById('formBox').classList.remove('show');
+            document.getElementById('formDescription').value = '';
+            document.getElementById('formAmount').value = '';
+            document.getElementById('formCategory').value = 'other';
+            document.getElementById('formDate').valueAsDate = new Date();
+        }
+
+        function saveTransaction() {
+            const desc = document.getElementById('formDescription').value.trim();
+            const amount = parseFloat(document.getElementById('formAmount').value);
+            const date = document.getElementById('formDate').value;
+            const category = document.getElementById('formCategory').value;
+
+            if (!desc || !amount || amount <= 0) {
+                alert('กรุณากรอกข้อมูลให้ครบ');
+                return;
+            }
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+            const transaction = {
+                id: Date.now(),
+                user: currentUser,
+                type: currentType,
+                description: desc,
+                amount: amount,
+                date: date,
+                category: category,
+                time: time
+            };
+
+            transactions.unshift(transaction);
+            saveData();
+            updateAll();
+            closeForm();
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveData();
+            updateAll();
+        }
+
+        function updateAll() {
+            updateDashboard();
+            updateDailyTab();
+            updateWeeklyTab();
+            updateMonthlyTab();
+        }
+
+        function showDashboard(type) {
+            document.getElementById('todayDash').style.display = 'none';
+            document.getElementById('weeklyDash').style.display = 'none';
+            document.getElementById('monthlyDash').style.display = 'none';
+            document.getElementById('yearlyDash').style.display = 'none';
+            
+            if (type === 'today') document.getElementById('todayDash').style.display = 'block';
+            else if (type === 'weekly') {
+                document.getElementById('weeklyDash').style.display = 'block';
+                calculateWeekly();
+            }
+            else if (type === 'monthly') {
+                document.getElementById('monthlyDash').style.display = 'block';
+                calculateMonthly();
+            }
+            else if (type === 'yearly') {
+                document.getElementById('yearlyDash').style.display = 'block';
+                calculateYearly();
+            }
+
+            // Update button styles
+            document.querySelectorAll('#dashboardSelector .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function calculateWeekly() {
+            const today = new Date();
+            const startDate = new Date(today);
+            startDate.setDate(today.getDate() - 6);
+            
+            const weekTx = transactions.filter(t => new Date(t.date) >= startDate && new Date(t.date) <= today);
+            const income = weekTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const expense = weekTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const profit = income - expense;
+            const avgPerDay = income > 0 ? (income / 7) : 0;
+
+            document.getElementById('weekIncome').textContent = '฿' + income.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('weekExpense').textContent = '฿' + expense.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('weekProfit').textContent = '฿' + profit.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('weekProfit').style.color = profit >= 0 ? '#4CAF50' : '#FF6B6B';
+            document.getElementById('weekAverage').textContent = '฿' + avgPerDay.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        }
+
+        function calculateMonthly() {
+            const monthStr = new Date().toISOString().slice(0, 7);
+            const monthTx = transactions.filter(t => t.date.startsWith(monthStr));
+            const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const expense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const profit = income - expense;
+            
+            const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+            const avgPerDay = income > 0 ? (income / daysInMonth) : 0;
+
+            document.getElementById('monthIncomeCard').textContent = '฿' + income.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthExpenseCard').textContent = '฿' + expense.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthProfitCard').textContent = '฿' + profit.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthProfitCard').style.color = profit >= 0 ? '#4CAF50' : '#FF6B6B';
+            document.getElementById('monthAverage').textContent = '฿' + avgPerDay.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        }
+
+        function calculateYearly() {
+            const currentYear = new Date().getFullYear();
+            const yearTx = transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
+            const income = yearTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const expense = yearTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const profit = income - expense;
+            
+            const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+            const daysInYear = isLeapYear ? 366 : 365;
+            const avgPerDay = income > 0 ? (income / daysInYear) : 0;
+
+            document.getElementById('yearIncome').textContent = '฿' + income.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('yearExpense').textContent = '฿' + expense.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('yearProfit').textContent = '฿' + profit.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('yearProfit').style.color = profit >= 0 ? '#4CAF50' : '#FF6B6B';
+            document.getElementById('yearAverage').textContent = '฿' + avgPerDay.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        }
+
+        function updateDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayTx = transactions.filter(t => t.date === today);
+            const todayIncome = todayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const todayExpense = todayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const balance = transactions.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0);
+
+            document.getElementById('todayIncome').textContent = '฿' + todayIncome.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('todayExpense').textContent = '฿' + todayExpense.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('cashBalance').textContent = '฿' + balance.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('cashBalance').style.color = balance >= 0 ? '#4CAF50' : '#FF6B6B';
+            document.getElementById('todayProfit').textContent = '฿' + (todayIncome - todayExpense).toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('todayProfit').style.color = (todayIncome - todayExpense) >= 0 ? '#4CAF50' : '#FF6B6B';
+            document.getElementById('accountBalance').textContent = '฿' + balance.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        }
+
+        function updateDailyTab() {
+            const dailyTx = transactions.filter(t => t.date === selectedDate).sort((a, b) => b.time - a.time);
+            let html = '';
+
+            if (dailyTx.length === 0) {
+                html = '<tr><td colspan="6" style="text-align: center; color: #aaa;">ไม่มีรายการในวันนี้</td></tr>';
+            } else {
+                dailyTx.forEach(t => {
+                    const badgeClass = t.type === 'income' ? 'badge-income' : 'badge-expense';
+                    const badgeText = t.type === 'income' ? 'รายรับ' : 'รายจ่าย';
+                    const amountClass = t.type === 'income' ? 'text-income' : 'text-expense';
+                    const sign = t.type === 'income' ? '+' : '-';
+                    const userText = t.user === 'user1' ? '👤 พนักงาน 1' : '👤 พนักงาน 2';
+
+                    html += `
+                        <tr style="background: ${t.type === 'income' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 107, 107, 0.1)'};">
+                            <td>${t.time}</td>
+                            <td>${userText}</td>
+                            <td>${t.description}</td>
+                            <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                            <td style="text-align: right;" class="${amountClass}">${sign}฿${t.amount.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                            <td style="text-align: center;"><button class="btn-delete" onclick="deleteTransaction(${t.id})">ลบ</button></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('dailyTable').innerHTML = html;
+            document.getElementById('selectedDateDisplay').textContent = new Date(selectedDate).toLocaleDateString('th-TH');
+        }
+
+        function updateWeeklyTab() {
+            const today = new Date();
+            let html = '';
+            let totalIncome = 0, totalExpense = 0, totalProfit = 0;
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const dayName = d.toLocaleDateString('th-TH', { weekday: 'short' });
+                const dayTx = transactions.filter(t => t.date === dateStr);
+                const income = dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+                const expense = dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+                const profit = income - expense;
+
+                totalIncome += income;
+                totalExpense += expense;
+                totalProfit += profit;
+
+                const profitColor = profit >= 0 ? '#4CAF50' : '#FF6B6B';
+                html += `
+                    <tr>
+                        <td>${dayName}</td>
+                        <td style="text-align: right; color: #4CAF50; font-weight: bold;">฿${income.toLocaleString('th-TH')}</td>
+                        <td style="text-align: right; color: #FF6B6B; font-weight: bold;">฿${expense.toLocaleString('th-TH')}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${profitColor};">฿${profit.toLocaleString('th-TH')}</td>
+                    </tr>
+                `;
+            }
+
+            const totalProfitColor = totalProfit >= 0 ? '#4CAF50' : '#FF6B6B';
+            html += `
+                <tr style="background: #444; font-weight: bold; border-top: 2px solid #D2691E;">
+                    <td style="color: #D2691E;">รวม</td>
+                    <td style="text-align: right; color: #4CAF50;">฿${totalIncome.toLocaleString('th-TH')}</td>
+                    <td style="text-align: right; color: #FF6B6B;">฿${totalExpense.toLocaleString('th-TH')}</td>
+                    <td style="text-align: right; color: ${totalProfitColor};">฿${totalProfit.toLocaleString('th-TH')}</td>
+                </tr>
+            `;
+
+            document.getElementById('weeklyTable').innerHTML = html;
+        }
+
+        function updateMonthlyTab() {
+            const monthStr = new Date().toISOString().slice(0, 7);
+            const monthTx = transactions.filter(t => t.date.startsWith(monthStr));
+            const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const expense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const profit = income - expense;
+
+            document.getElementById('monthIncome').textContent = '฿' + income.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthExpense').textContent = '฿' + expense.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthProfit').textContent = '฿' + profit.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('monthProfit').style.color = profit >= 0 ? '#4CAF50' : '#FF6B6B';
+
+            // Categories
+            const categories = {};
+            monthTx.filter(t => t.type === 'expense').forEach(t => {
+                categories[t.category] = (categories[t.category] || 0) + t.amount;
+            });
+
+            let html = '';
+            if (Object.keys(categories).length === 0) {
+                html = '<tr><td colspan="3" style="text-align: center; color: #aaa;">ไม่มีรายจ่ายในเดือนนี้</td></tr>';
+            } else {
+                Object.entries(categories).forEach(([cat, amt]) => {
+                    const label = categoryLabels[cat] || '📌 อื่น ๆ';
+                    const percent = expense > 0 ? ((amt / expense) * 100).toFixed(1) : 0;
+                    html += `
+                        <tr>
+                            <td>${label}</td>
+                            <td style="text-align: right; color: #FF6B6B; font-weight: bold;">฿${amt.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                            <td style="text-align: right; color: #D2691E; font-weight: bold;">${percent}%</td>
+                        </tr>
+                    `;
+                });
+                html += `
+                    <tr style="background: #444; font-weight: bold; border-top: 2px solid #D2691E;">
+                        <td style="color: #D2691E;">รวมรายจ่าย</td>
+                        <td style="text-align: right; color: #FF6B6B;">฿${expense.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #D2691E;">100%</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('categoryTable').innerHTML = html;
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            if (tab === 'daily') {
+                document.getElementById('dailyTab').classList.add('show');
+            } else if (tab === 'weekly') {
+                document.getElementById('weeklyTab').classList.add('show');
+            } else if (tab === 'monthly') {
+                document.getElementById('monthlyTab').classList.add('show');
+            }
+
+            event.target.classList.add('active');
+        }
+
+        function changeDailyDate() {
+            selectedDate = document.getElementById('dailyDateSelector').value;
+            updateDailyTab();
+        }
+    </script>
+</body>
+</html>
